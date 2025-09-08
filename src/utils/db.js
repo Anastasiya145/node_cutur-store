@@ -13,6 +13,4 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   },
 });
 
-// console.log("Connecting to database...", sequelize, sequelize.options);
-
 module.exports = sequelize;

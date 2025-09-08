@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "node_auth-app",
+  "name": "node_cutur-store",
   "builds": [
     {
       "src": "server.js",
