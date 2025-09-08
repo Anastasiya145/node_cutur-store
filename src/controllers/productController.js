@@ -3,6 +3,7 @@ const productService = require("../services/productService");
 const getAllProducts = async (req, res) => {
   try {
     const products = await productService.getAllProducts();
+    console.log(products);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -23,9 +24,7 @@ const getProductById = async (req, res) => {
 
 const getProductsByCategory = async (req, res) => {
   try {
-    const products = await productService.getProductsByCategory(
-      req.params.categoryName
-    );
+    const products = await productService.getProductsByCategory(req.params.categoryName);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
