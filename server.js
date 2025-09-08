@@ -11,8 +11,8 @@ app.get("/", (req, res) => {
 });
 app.get("/products", productController.getAllProducts);
 app.get("/products/:id", productController.getProductById);
+app.get("/categories", productController.getAllCategories);
 app.get("/categories/:categoryName", productController.getProductsByCategory);
-app.get("/categories", productController.getProductsByCategory);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
