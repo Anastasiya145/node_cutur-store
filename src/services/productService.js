@@ -27,9 +27,8 @@ const getAllCategories = async () => {
     SELECT
       TRIM(category) as title,
       TRIM(category) as name,
-      COUNT(*) as itemCount
+      COUNT(*)::int as itemCount
     FROM products
-    WHERE category IS NOT NULL AND TRIM(category) <> ''
     GROUP BY TRIM(category)
     ORDER BY title
   `);
@@ -37,7 +36,7 @@ const getAllCategories = async () => {
     id: idx + 1,
     title: row.title,
     name: row.name,
-    itemCount: Number(row.itemCount),
+    itemCount: row.itemCount ?? 0,
   }));
 };
 
