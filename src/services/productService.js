@@ -25,18 +25,18 @@ const getProductsByCategory = async (category) => {
 const getAllCategories = async () => {
   const [rows] = await sequelize.query(`
     SELECT
-      TRIM(category) as title,
-      TRIM(category) as name,
-      COUNT(*)::int as itemCount
+      category as title,
+      category as name,
+      COUNT(*) as itemCount
     FROM products
-    GROUP BY TRIM(category)
-    ORDER BY title
+    GROUP BY category
+    ORDER BY category
   `);
   return rows.map((row, idx) => ({
     id: idx + 1,
     title: row.title,
     name: row.name,
-    itemCount: row.itemCount ?? 0,
+    itemCount: Number(row.itemCount) || 0,
   }));
 };
 
