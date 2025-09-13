@@ -13,12 +13,9 @@ const getProductById = async (id) => {
 };
 
 const getProductsByCategory = async (category) => {
-  const [rows] = await sequelize.query(
-    "SELECT * FROM products WHERE category = $1",
-    {
-      bind: [category],
-    }
-  );
+  const [rows] = await sequelize.query("SELECT * FROM products WHERE category = $1", {
+    bind: [category],
+  });
   return rows;
 };
 
@@ -32,12 +29,7 @@ const getAllCategories = async () => {
     GROUP BY category
     ORDER BY category
   `);
-  return rows.map((row, idx) => ({
-    id: idx + 1,
-    title: row.title,
-    name: row.name,
-    itemCount: Number(row.itemCount) || 0,
-  }));
+  return rows;
 };
 
 module.exports = {
