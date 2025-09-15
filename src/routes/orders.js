@@ -7,6 +7,6 @@ router.get("/commandes/:userEmail", orderController.getOrdersByUserEmail);
 router.get("/commande/:id", orderController.getOrderById);
 
 // create order
-router.post("/commandes", orderController.createOrder);
+router.post("/commande", orderController.createOrder);
 
 module.exports = router;
