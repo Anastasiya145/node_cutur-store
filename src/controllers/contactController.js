@@ -11,8 +11,8 @@ const contactUs = async (req, res) => {
         .json({ error: "Name, email, and message are required" });
     }
     await resendClient.emails.send({
-      from: "no-reply@yourdomain.com",
-      to: "asiva@ukr.net",
+      from: process.env.RESEND_EMAIL_FROM,
+      to: process.env.MY_EMAIL,
       subject: "Contact Us Form",
       html: `<b>Name:</b> ${name}<br/><b>Email:</b> ${email}<br/><b>Message:</b> ${message}`,
       reply_to: email,

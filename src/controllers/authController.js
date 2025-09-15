@@ -24,7 +24,6 @@ const register = async (req, res) => {
       email,
       password,
       username,
-      address,
     });
     // Генерация JWT токена
     const token = jwt.sign(
@@ -45,6 +44,8 @@ const login = async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
     const user = await userService.loginUser({ email, password });
+
+    console.log(email, password, user);
     res.status(200).json(user);
   } catch (err) {
     res.status(400).json({ error: err.message });

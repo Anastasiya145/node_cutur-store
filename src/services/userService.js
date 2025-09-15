@@ -29,7 +29,7 @@ async function resetPassword(token, newPassword) {
 const bcrypt = require("bcrypt");
 const sequelize = require("../utils/db");
 
-async function registerUser({ email, password, username, address }) {
+async function registerUser({ email, password, username }) {
   const [existing] = await sequelize.query(
     "SELECT id FROM users WHERE email = $1",
     { bind: [email] }
@@ -37,8 +37,8 @@ async function registerUser({ email, password, username, address }) {
   if (existing.length) throw new Error("Email already registered");
   const hash = await bcrypt.hash(password, 10);
   await sequelize.query(
-    "INSERT INTO users (email, password, username, address) VALUES ($1, $2, $3, $4)",
-    { bind: [email, hash, username, address] }
+    "INSERT INTO users (email, password, username) VALUES ($1, $2, $3)",
+    { bind: [email, hash, username] }
   );
   return { email, username };
 }
