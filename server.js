@@ -1,6 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const productController = require("./src/controllers/productController");
+
+const productRoutes = require("./src/routes/products");
+const categoriesRoutes = require("./src/routes/categories");
+const contactRoutes = require("./src/routes/contact");
+const authRoutes = require("./src/routes/auth");
 
 const app = express();
 
@@ -26,10 +30,11 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
-app.get("/products", productController.getAllProducts);
-app.get("/products/:id", productController.getProductById);
-app.get("/categories", productController.getAllCategories);
-app.get("/categories/:categoryName", productController.getProductsByCategory);
+
+app.use("/products", productRoutes);
+app.use("/categories", categoriesRoutes);
+app.use("/", contactRoutes);
+app.use("/", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
