@@ -25,13 +25,8 @@ const register = async (req, res) => {
       password,
       username,
     });
-    // Генерация JWT токена
-    const token = jwt.sign(
-      { email: user.email, username: user.username },
-      process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "7d" }
-    );
-    res.status(201).json({ ...user, token });
+    // Не возвращаем токен!
+    res.status(201).json(user);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

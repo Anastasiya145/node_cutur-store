@@ -22,7 +22,7 @@ async function loginUser({ email, password }) {
     "SELECT * FROM users WHERE email = $1",
     { bind: [email] }
   );
-  if (!users.length) throw new Error("Invalid email or password");
+  if (!users.length) throw new Error("User is not found");
   const user = users[0];
   const match = await bcrypt.compare(password, user.password);
   if (!match) throw new Error("Invalid email or password");
