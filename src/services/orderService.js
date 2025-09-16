@@ -19,17 +19,109 @@ async function getOrderById(id) {
   const [orders] = await sequelize.query("SELECT * FROM orders WHERE id = $1", {
     bind: [id],
   });
-  return orders[0] || null;
+  if (!orders.length) return null;
+  const order = orders[0];
+  const [items] = await sequelize.query(
+    "SELECT * FROM order_items WHERE order_id = $1 ORDER BY id",
+    { bind: [id] }
+  );
+  order.items = items;
+  return order;
 }
 
-async function createOrder({ user_email, date, status, total, items }) {
-  const [result] = await sequelize.query(
-    `INSERT INTO orders (user_email, date, status, total, items)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING *`,
-    { bind: [user_email, date, status, total, JSON.stringify(items)] }
-  );
-  return result[0];
+/*
+  НАДЁЖНЫЙ createOrder:
+  - Ожидает { user_email, items: [{ id, quantity }], date?, status? }
+  - В транзакции:
+      * Получает продукты по id с блокировкой (FOR UPDATE)
+      * Проверяет наличие и остаток
+      * Считает total
+      * Вставляет заказ (orders)
+      * Вставляет строки заказа (order_items)
+      * Уменьшает остатки в products
+  - Если что-то не так — откатывает транзакцию
+*/
+async function createOrder({ user_email, items, status = "Pending" }) {
+  if (!user_email) throw new Error("user_email required");
+  if (!Array.isArray(items) || items.length === 0)
+    throw new Error("items required");
+
+  const t = await sequelize.transaction();
+  try {
+    // Валидация входных данных
+    for (const it of items) {
+      if (!it || typeof it.id !== "number" || !Number.isInteger(it.id))
+        throw new Error("each item must have numeric id");
+      if (
+        typeof it.quantity !== "number" ||
+        !Number.isInteger(it.quantity) ||
+        it.quantity <= 0
+      )
+        throw new Error("each item must have positive integer quantity");
+    }
+
+    const ids = items.map((it) => it.id);
+
+    // Получаем продукты с блокировкой строк
+    const [products] = await sequelize.query(
+      `SELECT id, name, price, itemsleft, images FROM products WHERE id = ANY($1::int[]) FOR UPDATE`,
+      { bind: [ids], transaction: t }
+    );
+    const prodMap = new Map(products.map((p) => [p.id, p]));
+
+    // Проверка наличия и расчёт total
+    let totalCents = 0;
+    for (const it of items) {
+      const p = prodMap.get(it.id);
+      if (!p) throw new Error(`Product ${it.id} not found`);
+      const priceNum = Number(p.price);
+      if (Number.isNaN(priceNum))
+        throw new Error(`Invalid price for product ${it.id}`);
+      if (p.itemsleft != null && Number(p.itemsleft) < it.quantity)
+        throw new Error(`Insufficient stock for product ${it.id}`);
+      totalCents += Math.round(priceNum * 100) * it.quantity;
+    }
+    const total = (totalCents / 100).toFixed(2);
+    const itemsJson = JSON.stringify(items);
+
+    // Вставляем заказ (дата будет выставлена автоматически в orders.created_at)
+    const [orderRows] = await sequelize.query(
+      `INSERT INTO orders (user_email, status, total, items)
+       VALUES ($1, $2, $3, $4::jsonb)
+       RETURNING *`,
+      { bind: [user_email, status, total, itemsJson], transaction: t }
+    );
+    const order = orderRows[0];
+
+    // Вставляем строки заказа и уменьшаем остатки
+    for (const it of items) {
+      const p = prodMap.get(it.id);
+      const image =
+        Array.isArray(p.images) && p.images.length ? p.images[0] : null;
+
+      await sequelize.query(
+        `INSERT INTO order_items (order_id, product_id, name, price, quantity, image)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        {
+          bind: [order.id, p.id, p.name, p.price, it.quantity, image],
+          transaction: t,
+        }
+      );
+
+      if (p.itemsleft != null) {
+        await sequelize.query(
+          `UPDATE products SET itemsleft = itemsleft - $1 WHERE id = $2`,
+          { bind: [it.quantity, p.id], transaction: t }
+        );
+      }
+    }
+
+    await t.commit();
+    return order;
+  } catch (err) {
+    await t.rollback();
+    throw err;
+  }
 }
 
 module.exports = {

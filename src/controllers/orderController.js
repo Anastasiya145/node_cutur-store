@@ -32,15 +32,13 @@ async function getOrderById(req, res) {
 
 async function createOrder(req, res) {
   try {
-    const { user_email, date, status, total, items } = req.body;
-    if (!user_email || !date || !status || !total || !items) {
+    const { user_email, status, items } = req.body;
+    if (!user_email || !status || !items) {
       return res.status(400).json({ error: "Missing required order fields" });
     }
     const order = await orderService.createOrder({
       user_email,
-      date,
       status,
-      total,
       items,
     });
     res.status(201).json(order);
@@ -55,3 +53,13 @@ module.exports = {
   getOrderById,
   createOrder,
 };
+поп;
+
+// давай улучшим систему запиши заказов на сервере
+// жду твои советы
+
+// я думаю что нужно вместо айтемс массив , отправлять массив айди и потом на бек реализовать чтобы по айди он сам записывал заказанные товары в таблицу commandes из таблицы products
+
+// так же с фронта надо передавать количество каждого заказаного товара и уменшать их в таблице продактс
+
+// жду твои
