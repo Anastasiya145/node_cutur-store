@@ -1,5 +1,6 @@
 const sequelize = require("../utils/db");
 
+// Получить все заказы (только для админки, без деталей товаров)
 async function getAllOrders() {
   const [orders] = await sequelize.query(
     "SELECT * FROM orders ORDER BY created_at DESC"
@@ -7,14 +8,24 @@ async function getAllOrders() {
   return orders;
 }
 
+// Получить заказы пользователя с деталями товаров
 async function getOrdersByUserEmail(userEmail) {
   const [orders] = await sequelize.query(
     "SELECT * FROM orders WHERE user_email = $1 ORDER BY created_at DESC",
     { bind: [userEmail] }
   );
+  // Для каждого заказа подгружаем строки заказа с деталями товаров
+  for (const order of orders) {
+    const [items] = await sequelize.query(
+      "SELECT * FROM order_items WHERE order_id = $1 ORDER BY id",
+      { bind: [order.id] }
+    );
+    order.items = items;
+  }
   return orders;
 }
 
+// Получить заказ по id с деталями товаров
 async function getOrderById(id) {
   const [orders] = await sequelize.query("SELECT * FROM orders WHERE id = $1", {
     bind: [id],
@@ -29,18 +40,7 @@ async function getOrderById(id) {
   return order;
 }
 
-/*
-  НАДЁЖНЫЙ createOrder:
-  - Ожидает { user_email, items: [{ id, quantity }], status? }
-  - В транзакции:
-      * Получает продукты по id с блокировкой (FOR UPDATE)
-      * Проверяет наличие и остаток
-      * Считает total
-      * Вставляет заказ (orders)
-      * Вставляет строки заказа (order_items)
-      * Уменьшает остатки в products
-  - Если что-то не так — откатывает транзакцию
-*/
+// Надёжное создание заказа (см. предыдущие версии)
 async function createOrder({ user_email, items, status = "Pending" }) {
   if (!user_email) throw new Error("user_email required");
   if (!Array.isArray(items) || items.length === 0)
