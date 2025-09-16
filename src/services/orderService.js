@@ -41,10 +41,12 @@ async function getOrderById(id) {
 }
 
 // Надёжное создание заказа (см. предыдущие версии)
-async function createOrder({ user_email, items, status = "Pending" }) {
+async function createOrder({ user_email, items }) {
   if (!user_email) throw new Error("user_email required");
   if (!Array.isArray(items) || items.length === 0)
     throw new Error("items required");
+
+  const status = "created";
 
   const t = await sequelize.transaction();
   try {
@@ -124,9 +126,57 @@ async function createOrder({ user_email, items, status = "Pending" }) {
   }
 }
 
+// Удаление заказа (только если прошло не более 24 часов)
+async function deleteOrder(orderId, userEmail) {
+  // Получаем заказ
+  const [orders] = await sequelize.query(
+    "SELECT * FROM orders WHERE id = $1 AND user_email = $2",
+    { bind: [orderId, userEmail] }
+  );
+  if (!orders.length) throw new Error("Order not found");
+  const order = orders[0];
+
+  // Проверяем, что прошло не более 24 часов с момента создания
+  const createdAt = new Date(order.created_at);
+  const now = new Date();
+  const diffHours = (now - createdAt) / (1000 * 60 * 60);
+  if (diffHours > 24)
+    throw new Error("Order can only be cancelled within 24 hours");
+
+  const t = await sequelize.transaction();
+  try {
+    // Получаем строки заказа
+    const [items] = await sequelize.query(
+      "SELECT * FROM order_items WHERE order_id = $1",
+      { bind: [orderId], transaction: t }
+    );
+
+    // Возвращаем товары на склад
+    for (const item of items) {
+      await sequelize.query(
+        `UPDATE products SET itemsleft = itemsleft + $1 WHERE id = $2`,
+        { bind: [item.quantity, item.product_id], transaction: t }
+      );
+    }
+
+    // Обновляем статус заказа и updated_at
+    await sequelize.query(
+      `UPDATE orders SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      { bind: [orderId], transaction: t }
+    );
+
+    await t.commit();
+    return { success: true };
+  } catch (err) {
+    await t.rollback();
+    throw err;
+  }
+}
+
 module.exports = {
   getAllOrders,
   getOrdersByUserEmail,
   getOrderById,
   createOrder,
+  deleteOrder, // добавлен экспорт
 };
