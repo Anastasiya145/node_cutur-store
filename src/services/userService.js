@@ -1,4 +1,40 @@
 const crypto = require("crypto");
+const bcrypt = require("bcrypt");
+const sequelize = require("../utils/db");
+
+async function registerUser({ email, password, username }) {
+  const [existing] = await sequelize.query(
+    "SELECT id FROM users WHERE email = $1",
+    { bind: [email] }
+  );
+  if (existing.length) throw new Error("Email already registered");
+  const hash = await bcrypt.hash(password, 10);
+  await sequelize.query(
+    "INSERT INTO users (email, password, username, role) VALUES ($1, $2, $3, $4)",
+    { bind: [email, hash, username, "user"] }
+  );
+  // При регистрации токен не возвращаем!
+  return { email, username };
+}
+
+async function loginUser({ email, password }) {
+  const [users] = await sequelize.query(
+    "SELECT * FROM users WHERE email = $1",
+    { bind: [email] }
+  );
+  if (!users.length) throw new Error("Invalid email or password");
+  const user = users[0];
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) throw new Error("Invalid email or password");
+  // Возвращаем только нужные данные для токена
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
+}
+
 async function createPasswordResetToken(email) {
   const [users] = await sequelize.query(
     "SELECT * FROM users WHERE email = $1",
@@ -25,34 +61,6 @@ async function resetPassword(token, newPassword) {
     "UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
     { bind: [hash, users[0].id] }
   );
-}
-const bcrypt = require("bcrypt");
-const sequelize = require("../utils/db");
-
-async function registerUser({ email, password, username }) {
-  const [existing] = await sequelize.query(
-    "SELECT id FROM users WHERE email = $1",
-    { bind: [email] }
-  );
-  if (existing.length) throw new Error("Email already registered");
-  const hash = await bcrypt.hash(password, 10);
-  await sequelize.query(
-    "INSERT INTO users (email, password, username) VALUES ($1, $2, $3)",
-    { bind: [email, hash, username] }
-  );
-  return { email, username };
-}
-
-async function loginUser({ email, password }) {
-  const [users] = await sequelize.query(
-    "SELECT * FROM users WHERE email = $1",
-    { bind: [email] }
-  );
-  if (!users.length) throw new Error("Invalid email or password");
-  const user = users[0];
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) throw new Error("Invalid email or password");
-  return { email: user.email, username: user.username };
 }
 
 module.exports = {

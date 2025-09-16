@@ -44,8 +44,10 @@ const login = async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
     const user = await userService.loginUser({ email, password });
+    // Генерируем JWT токен
+    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    res.status(200).json(user);
+    res.status(200).json({ ...user, token });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
