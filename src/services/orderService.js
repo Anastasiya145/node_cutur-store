@@ -2,14 +2,14 @@ const sequelize = require("../utils/db");
 
 async function getAllOrders() {
   const [orders] = await sequelize.query(
-    "SELECT * FROM orders ORDER BY date DESC"
+    "SELECT * FROM orders ORDER BY created_at DESC"
   );
   return orders;
 }
 
 async function getOrdersByUserEmail(userEmail) {
   const [orders] = await sequelize.query(
-    "SELECT * FROM orders WHERE user_email = $1 ORDER BY date DESC",
+    "SELECT * FROM orders WHERE user_email = $1 ORDER BY created_at DESC",
     { bind: [userEmail] }
   );
   return orders;
@@ -31,7 +31,7 @@ async function getOrderById(id) {
 
 /*
   НАДЁЖНЫЙ createOrder:
-  - Ожидает { user_email, items: [{ id, quantity }], date?, status? }
+  - Ожидает { user_email, items: [{ id, quantity }], status? }
   - В транзакции:
       * Получает продукты по id с блокировкой (FOR UPDATE)
       * Проверяет наличие и остаток
