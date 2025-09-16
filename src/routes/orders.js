@@ -7,7 +7,7 @@ router.get("/commandes", orderController.getAllOrders);
 router.get(
   "/commandes/:userEmail",
   authMiddleware,
-  orderController.getOrdersByUserEmail
+  orderController.getUsersOrders
 );
 router.get("/commande/:id", authMiddleware, orderController.getOrderById);
 router.post("/commande", authMiddleware, orderController.createOrder);

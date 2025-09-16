@@ -10,13 +10,9 @@ async function getAllOrders(req, res) {
   }
 }
 
-async function getOrdersByUserEmail(req, res) {
+async function getUsersOrders(req, res) {
   try {
-    const { userEmail } = req.params;
-    // Только владелец или админ может смотреть свои заказы
-    if (req.user.email !== userEmail) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+    const userEmail = req.user.email; // берем инфо из токена
     const orders = await orderService.getOrdersByUserEmail(userEmail);
     res.json(orders);
   } catch (e) {
@@ -70,7 +66,7 @@ async function deleteOrder(req, res) {
 
 module.exports = {
   getAllOrders,
-  getOrdersByUserEmail,
+  getUsersOrders,
   getOrderById,
   createOrder,
   deleteOrder,
