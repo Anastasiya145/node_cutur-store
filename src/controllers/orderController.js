@@ -1,14 +1,13 @@
 const orderService = require("../services/orderService");
-const jwt = require("jsonwebtoken");
 
-async function getAllOrders(req, res) {
-  try {
-    const orders = await orderService.getAllOrders();
-    res.json(orders);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-}
+// async function getAllOrders(req, res) {
+//   try {
+//     const orders = await orderService.getAllOrders();
+//     res.json(orders);
+//   } catch (e) {
+//     res.status(500).json({ error: e.message });
+//   }
+// }
 
 async function getUsersOrders(req, res) {
   try {
@@ -65,7 +64,7 @@ async function deleteOrder(req, res) {
 }
 
 module.exports = {
-  getAllOrders,
+  // getAllOrders,
   getUsersOrders,
   getOrderById,
   createOrder,

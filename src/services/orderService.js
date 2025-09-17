@@ -1,12 +1,12 @@
 const sequelize = require("../utils/db");
 
 // Получить все заказы (только для админки, без деталей товаров)
-async function getAllOrders() {
-  const [orders] = await sequelize.query(
-    "SELECT * FROM orders ORDER BY created_at DESC"
-  );
-  return orders;
-}
+// async function getAllOrders() {
+//   const [orders] = await sequelize.query(
+//     "SELECT * FROM orders ORDER BY created_at DESC"
+//   );
+//   return orders;
+// }
 
 // Получить заказы пользователя с деталями товаров
 async function getOrdersByUserEmail(userEmail) {
@@ -174,7 +174,7 @@ async function deleteOrder(orderId, userEmail) {
 }
 
 module.exports = {
-  getAllOrders,
+  // getAllOrders,
   getOrdersByUserEmail,
   getOrderById,
   createOrder,
