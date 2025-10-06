@@ -11,20 +11,20 @@ async function getUserByEmail(email) {
 
 async function updateUserAddress(email, address) {
   const [result] = await sequelize.query(
-    "UPDATE users SET address = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id, email, username, role, address, updated_at",
+    "UPDATE users SET address = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id",
     { bind: [address, email] }
   );
   if (!result.length) throw new Error("User not found");
-  return result[0];
+  return true; // только подтверждение успеха
 }
 
 async function updateUsername(email, username) {
   const [result] = await sequelize.query(
-    "UPDATE users SET username = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id, email, username, role, address, updated_at",
+    "UPDATE users SET username = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id",
     { bind: [username, email] }
   );
   if (!result.length) throw new Error("User not found");
-  return result[0];
+  return true;
 }
 
 module.exports = {
