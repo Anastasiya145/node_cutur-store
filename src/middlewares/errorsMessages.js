@@ -37,6 +37,11 @@ const errorMessages = {
 
   // General
   unexpectedError: "An unexpected error occurred",
+
+  // Password операции
+  requiredCurrentAndNewPassword:
+    "Current password and new password are required",
+  invalidCurrentPassword: "Current password is incorrect",
 };
 
 module.exports = errorMessages;

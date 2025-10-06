@@ -56,8 +56,37 @@ async function updateUsername(req, res) {
   }
 }
 
+// Изменить пароль пользователя
+async function updatePassword(req, res) {
+  try {
+    const { email } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    // Проверяем, что пользователь может изменить только свой пароль
+    if (req.user.email !== email) {
+      return res.status(403).json({ error: errorMessages.forbidden });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: errorMessages.requiredCurrentAndNewPassword });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: errorMessages.shortPassword });
+    }
+
+    await userService.updatePassword(email, currentPassword, newPassword);
+    res.json({ message: "Password updated successfully" });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
 module.exports = {
   getUserByEmail,
   updateUserAddress,
   updateUsername,
+  updatePassword, // новый контроллер
 };
