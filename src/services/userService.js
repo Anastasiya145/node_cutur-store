@@ -18,7 +18,17 @@ async function updateUserAddress(email, address) {
   return result[0];
 }
 
+async function updateUsername(email, username) {
+  const [result] = await sequelize.query(
+    "UPDATE users SET username = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id, email, username, role, address, updated_at",
+    { bind: [username, email] }
+  );
+  if (!result.length) throw new Error("User not found");
+  return result[0];
+}
+
 module.exports = {
   getUserByEmail,
   updateUserAddress,
+  updateUsername,
 };

@@ -1,4 +1,4 @@
-const userService = require("../services/userService");
+const userService = require("../services/userService"); // исправьте импорт
 
 // Получить данные пользователя (без пароля)
 async function getUserByEmail(req, res) {
@@ -34,7 +34,32 @@ async function updateUserAddress(req, res) {
   }
 }
 
+// Обновить имя пользователя
+async function updateUsername(req, res) {
+  try {
+    const { email } = req.params;
+    const { username } = req.body;
+    // Проверяем, что пользователь может изменить только своё имя
+    if (req.user.email !== email) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    if (!username || username.trim().length === 0) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+    if (username.length < 2) {
+      return res
+        .status(400)
+        .json({ error: "Username must be at least 2 characters" });
+    }
+    const user = await userService.updateUsername(email, username.trim());
+    res.json(user);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
 module.exports = {
   getUserByEmail,
   updateUserAddress,
+  updateUsername,
 };
