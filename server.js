@@ -38,7 +38,7 @@ app.use("/categories", categoriesRoutes);
 app.use("/", contactRoutes);
 app.use("/", authRoutes);
 app.use("/", ordersRoutes);
-app.use("/", usersRoutes);
+app.use("/users", usersRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
